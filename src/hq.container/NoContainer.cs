@@ -314,7 +314,7 @@ namespace hq.container
         {
             var cache = new ConcurrentDictionary<Type, T>();
 
-            return () => cache.GetOrAdd(typeof(T), f());
+            return () => cache.GetOrAdd(typeof(T), v => f());
         }
 
         private static Func<T> ThreadMemoize<T>(Func<T> f)
@@ -328,7 +328,7 @@ namespace hq.container
         {
             var cache = new ConcurrentDictionary<Type, T>();
 
-            return r => cache.GetOrAdd(typeof(T), f(this));
+            return r => cache.GetOrAdd(typeof(T), v => f(this));
         }
 
         private Func<IDependencyResolver, T> ThreadMemoize<T>(Func<IDependencyResolver, T> f)
