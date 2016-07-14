@@ -161,25 +161,29 @@ namespace hq.container
 
         public object AutoResolve(Type serviceType)
         {
-            Func<object> creator;
-
-            // got it:
-            if (_registrations.TryGetValue(serviceType, out creator)) return creator();
-
-            // want it:
-            TypeInfo typeInfo = serviceType.GetTypeInfo();
-            if (!typeInfo.IsAbstract) return CreateInstance(serviceType);
-
-            // need it:
-            Type type = _fallbackAssemblies.SelectMany(s => s.GetTypes()).FirstOrDefault(i => serviceType.IsAssignableFrom(i) && !i.GetTypeInfo().IsInterface);
-            if (type == null)
+            while (true)
             {
-                if (ThrowIfCantResolve)
-                    throw new InvalidOperationException($"No registration for {serviceType}");
-                return null;
-            }
+                Func<object> creator;
 
-            return AutoResolve(type);
+                // got it:
+                if (_registrations.TryGetValue(serviceType, out creator)) return creator();
+
+                // want it:
+                TypeInfo typeInfo = serviceType.GetTypeInfo();
+                if (!typeInfo.IsAbstract) return CreateInstance(serviceType);
+
+                // need it:
+                Type type = _fallbackAssemblies.SelectMany(s => s.GetTypes()).FirstOrDefault(i => serviceType.IsAssignableFrom(i) && !i.GetTypeInfo().IsInterface);
+                if (type == null)
+                {
+                    if (ThrowIfCantResolve)
+                        throw new InvalidOperationException($"No registration for {serviceType}");
+
+                    return null;
+                }
+
+                serviceType = type;
+            }
         }
 
         private object CreateInstance(Type implementationType)
@@ -274,11 +278,11 @@ namespace hq.container
                 case Lifetime.Thread:
                     registration = ThreadMemoize(builder);
                     break;
-//#if SupportsRequests
+#if SupportsRequests
                 case Lifetime.Request:
                     registration = RequestMemoize(builder);
                     break;
-//#endif
+#endif
                 default:
                     throw new ArgumentOutOfRangeException(nameof(lifetime), lifetime, null);
             }
@@ -299,11 +303,11 @@ namespace hq.container
                 case Lifetime.Thread:
                     registration = ThreadMemoize(builder);
                     break;
-//#if SupportsRequests
+#if SupportsRequests
                 case Lifetime.Request:
                     registration = RequestMemoize(builder);
                     break;
-//#endif
+#endif
                 default:
                     throw new ArgumentOutOfRangeException(nameof(lifetime), lifetime, null);
             }
@@ -314,7 +318,7 @@ namespace hq.container
         {
             var cache = new ConcurrentDictionary<Type, T>();
 
-            return () => cache.GetOrAdd(typeof(T), f());
+            return () => cache.GetOrAdd(typeof(T), v => f());
         }
 
         private static Func<T> ThreadMemoize<T>(Func<T> f)
@@ -328,7 +332,7 @@ namespace hq.container
         {
             var cache = new ConcurrentDictionary<Type, T>();
 
-            return r => cache.GetOrAdd(typeof(T), f(this));
+            return r => cache.GetOrAdd(typeof(T), v => f(this));
         }
 
         private Func<IDependencyResolver, T> ThreadMemoize<T>(Func<IDependencyResolver, T> f)
@@ -346,15 +350,7 @@ namespace hq.container
         }
     }
 
-    public enum Lifetime
-    {
-        AlwaysNew,
-        Permanent,
-        Thread,
-//#if SupportsRequests
-        Request
-//#endif
-    }
+    public enum Lifetime { AlwaysNew, Permanent, Thread, Request }
 
     public interface IContainer : IDependencyResolver, IDependencyRegistrar { }
 

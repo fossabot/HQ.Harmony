@@ -1,17 +1,32 @@
 {
-  "version": "1.0.0-*",
+  "title": "hq.container.aspnetmvc",
+  "version": "1.0.0",
+  "description": "Container is a minimal implementation of a dependency injection library built on .NET Core",
+  "authors": [ "HQ.io" ],
+  "copyright": "2016 hq.io",
+
+  "packOptions": {
+    "tags": [ "DI", "container", "hq.io", "mvc" ],
+    "owners": [ "hq.io" ],
+    "summary": "Container is a minimal implementation of a dependency injection library built on .NET Core",
+    "projectUrl": "https://github.com/hq-io/pipes",
+    "licenseUrl": "https://github.com/hq-io/pipes/blob/master/LICENSE",
+    "iconUrl": "",
+    "requireLicenseAcceptance": true,
+    "releaseNotes": "- initial release"
+  },
+
   "dependencies": {
-    "Microsoft.AspNetCore.Mvc.Abstractions": "1.0.0-rc2-final",
-    "Microsoft.AspNetCore.Mvc.Core": "1.0.0-rc2-final",
-    "NETStandard.Library": "1.5.0-rc2-24027",
-    "System.Reflection.Emit.Lightweight": "4.0.1-rc2-24027"
+    "NETStandard.Library": "1.6.0",
+    "Microsoft.AspNetCore.Mvc.Core": "1.0.0",
+    "System.Reflection.Emit.Lightweight": "4.0.1"
   },
   "frameworks": {
-    "netstandard1.5": {
+    "netstandard1.6": {
       "imports": "dnxcore50"
     }
   },
   "buildOptions": {
-    "defines": [ "SupportsRequests" ]
+    "define": [ "SupportsRequests" ]
   }
 }

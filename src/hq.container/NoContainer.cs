@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace hq.container
 {
-    public partial class NoContainer : IContainer
+    public class NoContainer : IContainer
     {
         private readonly IEnumerable<Assembly> _fallbackAssemblies;
 
@@ -161,25 +161,29 @@ namespace hq.container
 
         public object AutoResolve(Type serviceType)
         {
-            Func<object> creator;
-
-            // got it:
-            if (_registrations.TryGetValue(serviceType, out creator)) return creator();
-
-            // want it:
-            TypeInfo typeInfo = serviceType.GetTypeInfo();
-            if (!typeInfo.IsAbstract) return CreateInstance(serviceType);
-
-            // need it:
-            Type type = _fallbackAssemblies.SelectMany(s => s.GetTypes()).FirstOrDefault(i => serviceType.IsAssignableFrom(i) && !i.GetTypeInfo().IsInterface);
-            if (type == null)
+            while (true)
             {
-                if (ThrowIfCantResolve)
-                    throw new InvalidOperationException($"No registration for {serviceType}");
-                return null;
-            }
+                Func<object> creator;
 
-            return AutoResolve(type);
+                // got it:
+                if (_registrations.TryGetValue(serviceType, out creator)) return creator();
+
+                // want it:
+                TypeInfo typeInfo = serviceType.GetTypeInfo();
+                if (!typeInfo.IsAbstract) return CreateInstance(serviceType);
+
+                // need it:
+                Type type = _fallbackAssemblies.SelectMany(s => s.GetTypes()).FirstOrDefault(i => serviceType.IsAssignableFrom(i) && !i.GetTypeInfo().IsInterface);
+                if (type == null)
+                {
+                    if (ThrowIfCantResolve)
+                        throw new InvalidOperationException($"No registration for {serviceType}");
+
+                    return null;
+                }
+
+                serviceType = type;
+            }
         }
 
         private object CreateInstance(Type implementationType)
