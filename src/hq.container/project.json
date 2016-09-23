@@ -1,6 +1,6 @@
 {
   "title": "hq.container",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Container is a minimal implementation of a dependency injection library built on .NET Core.",
   "authors": [ "HQ.io" ],
   "copyright": "2016 hq.io",
@@ -13,15 +13,20 @@
     "licenseUrl": "https://github.com/hq-io/pipes/blob/master/LICENSE",
     "iconUrl": "",
     "requireLicenseAcceptance": true,
-    "releaseNotes": "- initial release"
+    "releaseNotes": "- combine ASP.NET project"
+  },
+
+  "buildOptions": {
+    "define": [ "SupportsRequests" ]
   },
 
   "dependencies": {
     "NETStandard.Library": "1.6.0",
     "System.Reflection.Emit.Lightweight": "4.0.1",
-    "System.Reflection.TypeExtensions": "4.1.0"
+    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0",
+    "Microsoft.AspNetCore.Http.Abstractions": "1.0.0"
   },
-
+  
   "frameworks": {
     "netstandard1.6": {
       "imports": "dnxcore50"

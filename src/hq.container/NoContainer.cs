@@ -73,6 +73,12 @@ namespace hq.container
         private readonly IDictionary<Type, Func<object>> _registrations = new ConcurrentDictionary<Type, Func<object>>();
         private readonly IDictionary<NameAndType, Func<object>> _namedRegistrations = new ConcurrentDictionary<NameAndType, Func<object>>();
 
+        public void Register(Type type, Func<object> builder, Lifetime lifetime = Lifetime.AlwaysNew)
+        {
+            Func<object> registration = WrapLifecycle(builder, lifetime);
+            _registrations[type] = registration;
+        }
+
         public void Register<T>(Func<T> builder, Lifetime lifetime = Lifetime.AlwaysNew) where T : class
         {
             Func<T> registration = WrapLifecycle(builder, lifetime);
@@ -357,6 +363,7 @@ namespace hq.container
 
     public interface IDependencyRegistrar : IDisposable
     {
+        void Register(Type type, Func<object> builder, Lifetime lifetime = Lifetime.AlwaysNew);
         void Register<T>(Func<T> builder, Lifetime lifetime = Lifetime.AlwaysNew) where T : class;
         void Register<T>(string name, Func<T> builder, Lifetime lifetime = Lifetime.AlwaysNew) where T : class;
         void Register<T>(Func<IDependencyResolver, T> builder, Lifetime lifetime = Lifetime.AlwaysNew) where T : class;
@@ -370,10 +377,5 @@ namespace hq.container
         T Resolve<T>(string name) where T : class;
         object Resolve(Type serviceType);
         object Resolve(Type serviceType, string name);
-    }
-
-    public static class DependencyContext
-    {
-        public static IContainer Current { get; set; }
     }
 }
