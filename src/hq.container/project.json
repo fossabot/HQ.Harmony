@@ -1,14 +1,14 @@
 {
   "title": "hq.container",
   "version": "1.0.0",
-  "description": "Container is a minimal implementation of a dependency injection library built on .NET Core",
+  "description": "Container is a minimal implementation of a dependency injection library built on .NET Core.",
   "authors": [ "HQ.io" ],
   "copyright": "2016 hq.io",
 
   "packOptions": {
     "tags": [ "DI", "container", "hq.io" ],
     "owners": [ "hq.io" ],
-    "summary": "Container is a minimal implementation of a dependency injection library built on .NET Core",
+    "summary": "Container is a minimal implementation of a dependency injection library built on .NET Core.",
     "projectUrl": "https://github.com/hq-io/pipes",
     "licenseUrl": "https://github.com/hq-io/pipes/blob/master/LICENSE",
     "iconUrl": "",

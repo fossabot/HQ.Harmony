@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace hq.container
 {
-    public class NoContainer : IContainer
+    public partial class NoContainer : IContainer
     {
         private readonly IEnumerable<Assembly> _fallbackAssemblies;
 
@@ -69,6 +69,7 @@ namespace hq.container
 
             public static IEqualityComparer<NameAndType> TypeNameComparer { get; } = new TypeNameEqualityComparer();
         }
+
         private readonly IDictionary<Type, Func<object>> _registrations = new ConcurrentDictionary<Type, Func<object>>();
         private readonly IDictionary<NameAndType, Func<object>> _namedRegistrations = new ConcurrentDictionary<NameAndType, Func<object>>();
 
@@ -309,7 +310,7 @@ namespace hq.container
                     break;
 #endif
                 default:
-                        throw new ArgumentOutOfRangeException(nameof(lifetime), lifetime, null);
+                    throw new ArgumentOutOfRangeException(nameof(lifetime), lifetime, null);
             }
             return registration;
         }
@@ -341,8 +342,8 @@ namespace hq.container
 
             return r => cache.Value;
         }
-        
-#endregion
+
+        #endregion
 
         public void Dispose()
         {

@@ -9,8 +9,8 @@
     "tags": [ "DI", "container", "hq.io", "mvc" ],
     "owners": [ "hq.io" ],
     "summary": "Container is a minimal implementation of a dependency injection library built on .NET Core",
-    "projectUrl": "https://github.com/hq-io/pipes",
-    "licenseUrl": "https://github.com/hq-io/pipes/blob/master/LICENSE",
+    "projectUrl": "https://github.com/hq-io/container",
+    "licenseUrl": "https://github.com/hq-io/container/blob/master/LICENSE",
     "iconUrl": "",
     "requireLicenseAcceptance": true,
     "releaseNotes": "- initial release"
