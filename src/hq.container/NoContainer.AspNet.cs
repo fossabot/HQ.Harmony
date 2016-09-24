@@ -46,63 +46,73 @@ namespace hq.container
                 return (T)item;
             };
         }
-    }
 
-    public static class ContainerExtensions
-    {
-        public static void Import(this IContainer container, IEnumerable<ServiceDescriptor> descriptors)
+        public IServiceProvider Populate(IServiceCollection services)
         {
-            foreach (ServiceDescriptor descriptor in descriptors)
-            {
-                Lifetime lifetime;
-                switch (descriptor.Lifetime)
-                {
-                    case ServiceLifetime.Singleton:
-                        lifetime = Lifetime.Permanent;
-                        break;
-                    case ServiceLifetime.Scoped:
-                        lifetime = Lifetime.Thread;
-                        break;
-                    case ServiceLifetime.Transient:
-                        lifetime = Lifetime.AlwaysNew;
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-
-                if (descriptor.ImplementationType != null)
-                {
-                    container.Register(descriptor.ServiceType, () => container.Resolve(descriptor.ServiceType));
-                }
-                else if (descriptor.ImplementationFactory != null)
-                {
-                    container.Register(descriptor.ServiceType, () => descriptor.ImplementationFactory(container.Resolve<IServiceProvider>()), lifetime);
-                }
-                else
-                {
-                    container.Register(descriptor.ImplementationInstance);
-                }
-            }
+            Register<IServiceProvider>(() => new NoServiceProvider(this, services), Lifetime.Permanent);
+            Register<IServiceScopeFactory>(() => new NoServiceScopeFactory(this), Lifetime.Permanent);
+            Register<IEnumerable<ServiceDescriptor>>(services);
+            Register(this);
+            return Resolve<IServiceProvider>();
         }
     }
 
-    internal sealed class NoServiceProvider : IServiceProvider, ISupportRequiredService
+    internal sealed class NoServiceScopeFactory : IServiceScopeFactory
     {
         private readonly IContainer _container;
 
-        public NoServiceProvider(IContainer container)
+        public NoServiceScopeFactory(IContainer container)
         {
             _container = container;
         }
 
+        public IServiceScope CreateScope()
+        {
+            return new NoServiceScope(_container);
+        }
+
+        private class NoServiceScope : IServiceScope
+        {
+            private readonly IContainer _container;
+
+            public NoServiceScope(IContainer container)
+            {
+                _container = container;
+            }
+
+            public IServiceProvider ServiceProvider => _container.Resolve<IServiceProvider>();
+
+            public void Dispose() => _container.Dispose();
+        }
+    }
+    
+    internal sealed class NoServiceProvider : IServiceProvider, ISupportRequiredService
+    {
+        private readonly IContainer _container;
+        private readonly IServiceProvider _fallback;
+
+        public NoServiceProvider(IContainer container, IServiceCollection services)
+        {
+            _container = container;
+            _fallback = services.BuildServiceProvider();
+            RegisterServiceDescriptors(services);
+        }
+
+        private void RegisterServiceDescriptors(IServiceCollection services)
+        {
+            // we're going to shell out to the native container for anything passed in here
+            foreach (ServiceDescriptor descriptor in services)
+                _container.Register(descriptor.ServiceType, () => _fallback.GetService(descriptor.ServiceType), Lifetime.Permanent);
+        }
+
         public object GetService(Type serviceType)
         {
-            return _container.Resolve(serviceType);
+            return _container.Resolve(serviceType) ?? _fallback.GetService(serviceType);
         }
 
         public object GetRequiredService(Type serviceType)
         {
-            return _container.Resolve(serviceType);
+            return _container.Resolve(serviceType) ?? _fallback.GetRequiredService(serviceType);
         }
     }
 }
