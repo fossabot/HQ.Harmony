@@ -1,22 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{DFE006E7-3C4B-4E10-9886-C7F74CD3CD9F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1290A580-4C23-4974-AA73-DF1AB4CABB78}"
 	ProjectSection(SolutionItems) = preProject
-		global.json = global.json
 		LICENSE = LICENSE
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "hq.container", "src\hq.container\hq.container.xproj", "{BB78B687-CABD-4CC4-84E3-BE95C60E7FEF}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{54423C7F-02D7-429A-A5C3-38FF0D93BBAB}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "hq.container.tests", "test\hq.container.tests\hq.container.tests.xproj", "{9BD88A5D-E9F4-4D6E-83B5-DD6C37DF8EF7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "hq.container", "src\hq.container\hq.container.csproj", "{BB78B687-CABD-4CC4-84E3-BE95C60E7FEF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "hq.container.tests", "test\hq.container.tests\hq.container.tests.csproj", "{9BD88A5D-E9F4-4D6E-83B5-DD6C37DF8EF7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
