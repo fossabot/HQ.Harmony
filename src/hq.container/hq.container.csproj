@@ -6,7 +6,7 @@
     <AssemblyTitle>hq.container</AssemblyTitle>
     <VersionPrefix>1.0.1</VersionPrefix>
     <Authors>HQ.io</Authors>
-    <TargetFramework>netstandard1.6</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <DefineConstants>$(DefineConstants);SupportsRequests</DefineConstants>
     <AssemblyName>hq.container</AssemblyName>
     <PackageId>hq.container</PackageId>
@@ -15,18 +15,17 @@
     <PackageProjectUrl>https://github.com/hq-io/container</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/hq-io/container/blob/master/LICENSE</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageTargetFallback>$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <Version>1.1.0-pre</Version>
+    <Version>1.2.0-pre</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="hq.compiler" Version="1.1.0-pre" />
+    <PackageReference Include="hq.compiler" Version="1.2.0-pre" />
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="1.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="1.1.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.0.0" />
   </ItemGroup>
 
 </Project>
