@@ -1,10 +1,6 @@
 # NoContainer
 ## The next best thing to not needing one.
 
-```
-PM> Install-Package hq.container
-```
-
 ### Introduction
 
 NoContainer is a minimally useful implementation of a dependency injection library. It supports named instances,
