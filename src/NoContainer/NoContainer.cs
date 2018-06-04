@@ -1,6 +1,6 @@
 ﻿#region License
 /*
-   Copyright 2016 HQ.io
+   Copyright 2016 Daniel Crenna
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -22,12 +22,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Threading;
-using hq.compiler;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace hq.container
+namespace NoContainer
 {
     #region Interfaces
 
@@ -59,16 +59,17 @@ namespace hq.container
     
     #region Core Features
 
-    public partial class NoContainer : IContainer
+    public sealed class NoContainer : IContainer
     {
         private readonly IEnumerable<Assembly> _fallbackAssemblies;
+	    private readonly InstanceFactory _factory;
 
         public bool ThrowIfCantResolve { get; set; }
 
         public NoContainer(IEnumerable<Assembly> fallbackAssemblies = null)
         {
             _fallbackAssemblies = fallbackAssemblies ?? Enumerable.Empty<Assembly>();
-            _factory = new InstanceFactory();
+	        _factory = new InstanceFactory();
         }
 
         #region Register
@@ -305,8 +306,6 @@ namespace hq.container
 
         #region Auto-Resolve w/ Fallback
 
-        private readonly InstanceFactory _factory;
-
         private object CreateInstance(Type implementationType)
         {
             // type->constructor
@@ -438,126 +437,253 @@ namespace hq.container
             return r => cache.Value;
         }
 
-        #endregion
+		#endregion
 
-        public void Dispose()
+		#region Instancing
+
+		/// <summary> Provides high-performance object activation. </summary>
+		public class InstanceFactory
+		{
+			public delegate object ParameterlessObjectActivator();
+			public delegate object ObjectActivator(params object[] parameters);
+
+			private readonly IDictionary<Type, ParameterlessObjectActivator> _emptyActivators = new ConcurrentDictionary<Type, ParameterlessObjectActivator>();
+			private readonly IDictionary<Type, ObjectActivator> _activators = new ConcurrentDictionary<Type, ObjectActivator>();
+			private readonly IDictionary<Type, ConstructorInfo> _constructors = new ConcurrentDictionary<Type, ConstructorInfo>();
+			private readonly IDictionary<ConstructorInfo, ParameterInfo[]> _constructorParameters = new ConcurrentDictionary<ConstructorInfo, ParameterInfo[]>();
+
+			public static InstanceFactory Instance = new InstanceFactory();
+
+			/// <summary> Create an instance of the same type as the provided instance. </summary>
+			public object CreateInstance(object example)
+			{
+				return CreateInstance(example.GetType());
+			}
+
+			/// <summary> Create a typed instance assuming a parameterless constructor. </summary>
+			public T CreateInstance<T>()
+			{
+				return (T)CreateInstance(typeof(T));
+			}
+
+			public T CreateInstance<T>(object[] args)
+			{
+				return (T)CreateInstance(typeof(T), args);
+			}
+
+			/// <summary> Create an instance of a type assuming a parameterless constructor. </summary>
+			public object CreateInstance(Type implementationType)
+			{
+				// activator 
+				if (_emptyActivators.TryGetValue(implementationType, out var activator))
+					return activator();
+				var ctor = implementationType.GetConstructor(Type.EmptyTypes);
+				_emptyActivators[implementationType] = activator = DynamicMethodFactory.Build(implementationType, ctor);
+				return activator();
+			}
+
+			/// <summary> Create an instance of a type assuming a set of parameters. </summary>
+			public object CreateInstance(Type implementationType, object[] args)
+			{
+				if (args == null || args.Length == 0)
+					return CreateInstance(implementationType);
+
+				// activator 
+				if (!_activators.TryGetValue(implementationType, out var activator))
+				{
+					var ctor = GetOrCacheConstructorForType(implementationType);
+					var parameters = GetOrCacheParametersForConstructor(ctor);
+					_activators[implementationType] = activator = DynamicMethodFactory.Build(implementationType, ctor, parameters);
+				}
+
+				return activator(args);
+			}
+
+			public ParameterInfo[] GetOrCacheParametersForConstructor(ConstructorInfo ctor)
+			{
+				// constructor->parameters
+				if (!_constructorParameters.TryGetValue(ctor, out var parameters))
+					_constructorParameters[ctor] = parameters = ctor.GetParameters();
+				return parameters;
+			}
+
+			public ConstructorInfo GetOrCacheConstructorForType(Type implementationType)
+			{
+				// type->constructor
+				if (!_constructors.TryGetValue(implementationType, out var ctor))
+					_constructors[implementationType] = ctor = GetWidestConstructor(implementationType);
+				return ctor;
+			}
+
+			private static ConstructorInfo GetWidestConstructor(Type implementationType)
+			{
+				var ctors = implementationType.GetConstructors();
+				var ctor = ctors.OrderByDescending(c => c.GetParameters().Length).FirstOrDefault();
+				return ctor ?? implementationType.GetConstructor(Type.EmptyTypes);
+			}
+
+			/// <summary>Source: <see cref="http://stackoverflow.com/questions/2353174/c-sharp-emitting-dynamic-method-delegate-to-load-parametrized-constructor-proble"/></summary>
+			private static class DynamicMethodFactory
+			{
+				public static ParameterlessObjectActivator Build(Type implementationType, ConstructorInfo ctor)
+				{
+					var dynamicMethod = new DynamicMethod($"{implementationType.FullName}.0ctor", implementationType, Type.EmptyTypes, true);
+					var il = dynamicMethod.GetILGenerator();
+					il.Emit(OpCodes.Nop);
+					il.Emit(OpCodes.Newobj, ctor);
+					il.Emit(OpCodes.Ret);
+					return (ParameterlessObjectActivator)dynamicMethod.CreateDelegate(typeof(ParameterlessObjectActivator));
+				}
+
+				public static ObjectActivator Build(Type implementationType, ConstructorInfo ctor, IReadOnlyList<ParameterInfo> parameters)
+				{
+					var dynamicMethod = new DynamicMethod($"{implementationType.FullName}.ctor", implementationType, new[] { typeof(object[]) });
+					var il = dynamicMethod.GetILGenerator();
+					for (var i = 0; i < parameters.Count; i++)
+					{
+						il.Emit(OpCodes.Ldarg_0);
+						switch (i)
+						{
+							case 0: il.Emit(OpCodes.Ldc_I4_0); break;
+							case 1: il.Emit(OpCodes.Ldc_I4_1); break;
+							case 2: il.Emit(OpCodes.Ldc_I4_2); break;
+							case 3: il.Emit(OpCodes.Ldc_I4_3); break;
+							case 4: il.Emit(OpCodes.Ldc_I4_4); break;
+							case 5: il.Emit(OpCodes.Ldc_I4_5); break;
+							case 6: il.Emit(OpCodes.Ldc_I4_6); break;
+							case 7: il.Emit(OpCodes.Ldc_I4_7); break;
+							case 8: il.Emit(OpCodes.Ldc_I4_8); break;
+							default: il.Emit(OpCodes.Ldc_I4, i); break;
+						}
+						il.Emit(OpCodes.Ldelem_Ref);
+						var paramType = parameters[i].ParameterType;
+						il.Emit(paramType.GetTypeInfo().IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, paramType);
+					}
+
+					il.Emit(OpCodes.Newobj, ctor);
+					il.Emit(OpCodes.Ret);
+					return (ObjectActivator)dynamicMethod.CreateDelegate(typeof(ObjectActivator));
+				}
+			}
+		}
+
+		#endregion
+
+		#region ASP.NET Features
+
+		private Func<T> RequestMemoize<T>(Func<T> f)
+		{
+			return () =>
+			{
+				IHttpContextAccessor accessor = Resolve<IHttpContextAccessor>();
+				if (accessor?.HttpContext == null)
+					return f(); // always new
+
+				var cache = accessor.HttpContext.Items;
+				var cacheKey = f.ToString();
+				object item;
+				if (cache.TryGetValue(cacheKey, out item))
+					return (T)item; // got it
+
+				item = f(); // need it
+				cache.Add(cacheKey, item);
+				return (T)item;
+			};
+		}
+
+		private Func<IDependencyResolver, T> RequestMemoize<T>(Func<IDependencyResolver, T> f)
+		{
+			return r =>
+			{
+				IHttpContextAccessor accessor = r.Resolve<IHttpContextAccessor>();
+				if (accessor?.HttpContext == null)
+					return f(this); // always new
+
+				var cache = accessor.HttpContext.Items;
+				var cacheKey = f.ToString();
+				object item;
+				if (cache.TryGetValue(cacheKey, out item))
+					return (T)item; // got it
+
+				item = f(this); // need it
+				cache.Add(cacheKey, item);
+				return (T)item;
+			};
+		}
+
+		public IServiceProvider Populate(IServiceCollection services)
+		{
+			Register<IServiceProvider>(() => new NoServiceProvider(this, services), Lifetime.Permanent);
+			Register<IServiceScopeFactory>(() => new NoServiceScopeFactory(this), Lifetime.Permanent);
+			Register<IEnumerable<ServiceDescriptor>>(services);
+			Register(this);
+			return Resolve<IServiceProvider>();
+		}
+
+		internal sealed class NoServiceScopeFactory : IServiceScopeFactory
+		{
+			private readonly IContainer _container;
+
+			public NoServiceScopeFactory(IContainer container)
+			{
+				_container = container;
+			}
+
+			public IServiceScope CreateScope()
+			{
+				return new NoServiceScope(_container);
+			}
+
+			private class NoServiceScope : IServiceScope
+			{
+				private readonly IContainer _container;
+
+				public NoServiceScope(IContainer container)
+				{
+					_container = container;
+				}
+
+				public IServiceProvider ServiceProvider => _container.Resolve<IServiceProvider>();
+
+				public void Dispose() => _container.Dispose();
+			}
+		}
+
+		internal sealed class NoServiceProvider : IServiceProvider, ISupportRequiredService
+		{
+			private readonly IContainer _container;
+			private readonly IServiceProvider _fallback;
+
+			public NoServiceProvider(IContainer container, IServiceCollection services)
+			{
+				_container = container;
+				_fallback = services.BuildServiceProvider();
+				RegisterServiceDescriptors(services);
+			}
+
+			private void RegisterServiceDescriptors(IServiceCollection services)
+			{
+				// we're going to shell out to the native container for anything passed in here
+				foreach (ServiceDescriptor descriptor in services)
+					_container.Register(descriptor.ServiceType, () => _fallback.GetService(descriptor.ServiceType));
+			}
+
+			public object GetService(Type serviceType)
+			{
+				return _container.Resolve(serviceType) ?? _fallback.GetService(serviceType);
+			}
+
+			public object GetRequiredService(Type serviceType)
+			{
+				return _container.Resolve(serviceType) ?? _fallback.GetRequiredService(serviceType);
+			}
+		}
+
+		#endregion
+
+		public void Dispose()
         {
             // No scopes, so nothing to dispose
-        }
-    }
-
-    #endregion
-
-    #region ASP.NET Features
-
-    public partial class NoContainer
-    {
-        private Func<T> RequestMemoize<T>(Func<T> f)
-        {
-            return () =>
-            {
-                IHttpContextAccessor accessor = Resolve<IHttpContextAccessor>();
-                if (accessor?.HttpContext == null)
-                    return f(); // always new
-
-                var cache = accessor.HttpContext.Items;
-                var cacheKey = f.ToString();
-                object item;
-                if (cache.TryGetValue(cacheKey, out item))
-                    return (T)item; // got it
-
-                item = f(); // need it
-                cache.Add(cacheKey, item);
-                return (T)item;
-            };
-        }
-
-        private Func<IDependencyResolver, T> RequestMemoize<T>(Func<IDependencyResolver, T> f)
-        {
-            return r =>
-            {
-                IHttpContextAccessor accessor = r.Resolve<IHttpContextAccessor>();
-                if (accessor?.HttpContext == null)
-                    return f(this); // always new
-
-                var cache = accessor.HttpContext.Items;
-                var cacheKey = f.ToString();
-                object item;
-                if (cache.TryGetValue(cacheKey, out item))
-                    return (T)item; // got it
-
-                item = f(this); // need it
-                cache.Add(cacheKey, item);
-                return (T)item;
-            };
-        }
-
-        public IServiceProvider Populate(IServiceCollection services)
-        {
-            Register<IServiceProvider>(() => new NoServiceProvider(this, services), Lifetime.Permanent);
-            Register<IServiceScopeFactory>(() => new NoServiceScopeFactory(this), Lifetime.Permanent);
-            Register<IEnumerable<ServiceDescriptor>>(services);
-            Register(this);
-            return Resolve<IServiceProvider>();
-        }
-
-        internal sealed class NoServiceScopeFactory : IServiceScopeFactory
-        {
-            private readonly IContainer _container;
-
-            public NoServiceScopeFactory(IContainer container)
-            {
-                _container = container;
-            }
-
-            public IServiceScope CreateScope()
-            {
-                return new NoServiceScope(_container);
-            }
-
-            private class NoServiceScope : IServiceScope
-            {
-                private readonly IContainer _container;
-
-                public NoServiceScope(IContainer container)
-                {
-                    _container = container;
-                }
-
-                public IServiceProvider ServiceProvider => _container.Resolve<IServiceProvider>();
-
-                public void Dispose() => _container.Dispose();
-            }
-        }
-
-        internal sealed class NoServiceProvider : IServiceProvider, ISupportRequiredService
-        {
-            private readonly IContainer _container;
-            private readonly IServiceProvider _fallback;
-
-            public NoServiceProvider(IContainer container, IServiceCollection services)
-            {
-                _container = container;
-                _fallback = services.BuildServiceProvider();
-                RegisterServiceDescriptors(services);
-            }
-
-            private void RegisterServiceDescriptors(IServiceCollection services)
-            {
-                // we're going to shell out to the native container for anything passed in here
-                foreach (ServiceDescriptor descriptor in services)
-                    _container.Register(descriptor.ServiceType, () => _fallback.GetService(descriptor.ServiceType));
-            }
-
-            public object GetService(Type serviceType)
-            {
-                return _container.Resolve(serviceType) ?? _fallback.GetService(serviceType);
-            }
-
-            public object GetRequiredService(Type serviceType)
-            {
-                return _container.Resolve(serviceType) ?? _fallback.GetRequiredService(serviceType);
-            }
         }
     }
 

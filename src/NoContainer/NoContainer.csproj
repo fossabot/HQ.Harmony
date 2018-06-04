@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Container is a minimal implementation of a dependency injection library built on .NET Core.</Description>
+    <Copyright>2016 Daniel Crenna</Copyright>
+    <AssemblyTitle>NoContainer</AssemblyTitle>
+    <Authors>Daniel Crenna</Authors>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <DefineConstants>$(DefineConstants);SupportsRequests</DefineConstants>
+    <AssemblyName>NoContainer</AssemblyName>
+    <PackageId>NoContainer</PackageId>
+    <PackageTags>DI container dependency injection</PackageTags>
+    <PackageReleaseNotes></PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/danielcrenna/NoContainer</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/danielcrenna/NoContainer/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.1.0" />
+  </ItemGroup>
+
+</Project>

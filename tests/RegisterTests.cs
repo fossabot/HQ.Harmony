@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Xunit;
-using hq.container;
 
-namespace hq.container.tests
+namespace NoContainer.Tests
 {
     public class RegisterTests : IClassFixture<NoContainerFixture>
     {

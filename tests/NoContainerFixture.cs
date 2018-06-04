@@ -1,7 +1,6 @@
 ﻿using System;
-using hq.container;
 
-namespace hq.container.tests
+namespace NoContainer.Tests
 {
     public class NoContainerFixture : IDisposable
     {

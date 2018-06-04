@@ -2,6 +2,8 @@
 using System.Linq;
 using Xunit;
 using hq.container;
+using NoContainer;
+using NoContainer.Tests;
 
 namespace hq.container.tests
 {
