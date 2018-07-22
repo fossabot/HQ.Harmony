@@ -1,6 +1,6 @@
 ﻿#region License
 /*
-   Copyright 2016 Daniel Crenna
+   Copyright 2016-2018 Daniel Crenna
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -166,8 +166,8 @@ namespace NoContainer
 
         public void Register<T>(string name, Func<IDependencyResolver, T> builder, Lifetime lifetime = Lifetime.AlwaysNew) where T : class
         {
-            var type = typeof(T);
-            _namedRegistrations[new NameAndType(name, type)] = () => WrapLifecycle(builder, lifetime)(this);
+            Func<IDependencyResolver, T> registration = WrapLifecycle(builder, lifetime);
+	    _namedRegistrations[new NameAndType(name, typeof(T))] = () => registration(this);
         }
 
         public void Register<T>(Func<IDependencyResolver, T> builder, Lifetime lifetime = Lifetime.AlwaysNew) where T : class
