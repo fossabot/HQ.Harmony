@@ -24,8 +24,11 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+
+#if SupportsRequests
+using Microsoft.AspNetCore.Http;
+#endif
 
 namespace NoContainer
 {
@@ -571,6 +574,7 @@ namespace NoContainer
 
 		#region ASP.NET Features
 
+#if SupportsRequests
 		private Func<T> RequestMemoize<T>(Func<T> f)
 		{
 			return () =>
@@ -587,6 +591,8 @@ namespace NoContainer
 
 				item = f(); // need it
 				cache.Add(cacheKey, item);
+				if(item is IDisposable disposable)
+					accessor.HttpContext.Response.RegisterForDispose(disposable);
 				return (T)item;
 			};
 		}
@@ -607,9 +613,12 @@ namespace NoContainer
 
 				item = f(this); // need it
 				cache.Add(cacheKey, item);
+				if (item is IDisposable disposable)
+					accessor.HttpContext.Response.RegisterForDispose(disposable);
 				return (T)item;
 			};
 		}
+#endif
 
 		public IServiceProvider Populate(IServiceCollection services)
 		{

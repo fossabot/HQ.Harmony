@@ -2,14 +2,14 @@
 
   <PropertyGroup>
     <Description>Container is a minimal implementation of a dependency injection library built on .NET Core.</Description>
-    <Copyright>2016 Daniel Crenna</Copyright>
+    <Copyright>© 2016-2018 Daniel Crenna</Copyright>
     <AssemblyTitle>NoContainer</AssemblyTitle>
     <Authors>Daniel Crenna</Authors>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <DefineConstants>$(DefineConstants);SupportsRequests</DefineConstants>
     <AssemblyName>NoContainer</AssemblyName>
     <PackageId>NoContainer</PackageId>
-    <PackageTags>DI container dependency injection</PackageTags>
+    <PackageTags>DI container dependency injection IoC</PackageTags>
     <PackageReleaseNotes></PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/danielcrenna/NoContainer</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/danielcrenna/NoContainer/blob/master/LICENSE</PackageLicenseUrl>

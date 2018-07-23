@@ -1,11 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Xunit;
-using hq.container;
-using NoContainer;
-using NoContainer.Tests;
+﻿using Xunit;
 
-namespace hq.container.tests
+namespace NoContainer.Tests
 {
     public class ResolveTests : IClassFixture<NoContainerFixture>
     {
