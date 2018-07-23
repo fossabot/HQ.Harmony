@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using nocontainer;
 using Xunit;
 
 namespace NoContainer.Tests
 {
     public class RegisterTests : IClassFixture<NoContainerFixture>
     {
-        private readonly NoContainerFixture _fixture;
+        readonly NoContainerFixture _fixture;
 
         public RegisterTests(NoContainerFixture fixture)
         {

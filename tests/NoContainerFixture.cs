@@ -1,4 +1,5 @@
 ﻿using System;
+using nocontainer;
 
 namespace NoContainer.Tests
 {
@@ -6,7 +7,7 @@ namespace NoContainer.Tests
     {
         public NoContainerFixture()
         {
-            C = new NoContainer();
+            C = new nocontainer.NoContainer();
         }
 
         public void Dispose()

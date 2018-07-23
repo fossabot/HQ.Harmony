@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using nocontainer;
+using Xunit;
 
 namespace NoContainer.Tests
 {
@@ -14,7 +15,7 @@ namespace NoContainer.Tests
         [Fact]
         public void Can_resolve_transient_twice_with_different_references()
         {
-            _fixture.C.Register<IFoo>(() => new Foo(), Lifetime.AlwaysNew);
+            _fixture.C.Register<IFoo>(() => new Foo());
 
             var first = _fixture.C.Resolve<IFoo>();
             var second = _fixture.C.Resolve<IFoo>();

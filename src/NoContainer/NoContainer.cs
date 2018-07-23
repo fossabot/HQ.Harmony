@@ -30,7 +30,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 #endif
 
-namespace NoContainer
+namespace nocontainer
 {
     #region Interfaces
 
