@@ -25,51 +25,18 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
+using nocontainer;
 
-#if SupportsRequests
-using Microsoft.AspNetCore.Http;
-#endif
-
-namespace nocontainer
+namespace HQ.Harmony
 {
-    #region Interfaces
-
-    public enum Lifetime { AlwaysNew, Permanent, Thread, Request }
-
-    public interface IContainer : IDependencyResolver, IDependencyRegistrar { }
-
-    public interface IDependencyRegistrar : IDisposable
-    {
-        void Register(Type type, Func<object> builder, Lifetime lifetime = Lifetime.AlwaysNew);
-        void Register<T>(Func<T> builder, Lifetime lifetime = Lifetime.AlwaysNew) where T : class;
-        void Register<T>(string name, Func<T> builder, Lifetime lifetime = Lifetime.AlwaysNew) where T : class;
-        void Register<T>(Func<IDependencyResolver, T> builder, Lifetime lifetime = Lifetime.AlwaysNew) where T : class;
-        void Register<T>(string name, Func<IDependencyResolver, T> builder, Lifetime lifetime = Lifetime.AlwaysNew) where T : class;
-        void Register<T>(T instance);
-    }
-
-    public interface IDependencyResolver : IDisposable
-    {
-        T Resolve<T>() where T : class;
-        object Resolve(Type serviceType);
-        IEnumerable<T> ResolveAll<T>() where T : class;
-        IEnumerable ResolveAll(Type serviceType);
-        T Resolve<T>(string name) where T : class;
-        object Resolve(string name, Type serviceType);
-    }
-
-    #endregion
-    
-    #region Core Features
-
-    public sealed class NoContainer : IContainer
+	public sealed class HarmonyContainer : IContainer
     {
         private readonly IEnumerable<Assembly> _fallbackAssemblies;
 	    private readonly InstanceFactory _factory;
 
         public bool ThrowIfCantResolve { get; set; }
 
-        public NoContainer(IEnumerable<Assembly> fallbackAssemblies = null)
+        public HarmonyContainer(IEnumerable<Assembly> fallbackAssemblies = null)
         {
             _fallbackAssemblies = fallbackAssemblies ?? Enumerable.Empty<Assembly>();
 	        _factory = new InstanceFactory();
@@ -77,54 +44,7 @@ namespace nocontainer
 
         #region Register
 
-        public struct NameAndType
-        {
-            public readonly Type Type;
-            public readonly string Name;
-
-            public NameAndType(string name, Type type)
-            {
-                Name = name;
-                Type = type;
-            }
-
-            public bool Equals(NameAndType other)
-            {
-                return Type == other.Type && string.Equals(Name, other.Name);
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj)) return false;
-                return obj is NameAndType && Equals((NameAndType)obj);
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    return ((Type?.GetHashCode() ?? 0) * 397) ^ (Name?.GetHashCode() ?? 0);
-                }
-            }
-
-            private sealed class TypeNameEqualityComparer : IEqualityComparer<NameAndType>
-            {
-                public bool Equals(NameAndType x, NameAndType y)
-                {
-                    return x.Type == y.Type && string.Equals(x.Name, y.Name);
-                }
-
-                public int GetHashCode(NameAndType obj)
-                {
-                    unchecked
-                    {
-                        return ((obj.Type?.GetHashCode() ?? 0) * 397) ^ (obj.Name?.GetHashCode() ?? 0);
-                    }
-                }
-            }
-
-            public static IEqualityComparer<NameAndType> TypeNameComparer { get; } = new TypeNameEqualityComparer();
-        }
+        
 
         private readonly IDictionary<Type, Func<object>> _registrations = new ConcurrentDictionary<Type, Func<object>>();
         private readonly IDictionary<NameAndType, Func<object>> _namedRegistrations = new ConcurrentDictionary<NameAndType, Func<object>>();
@@ -695,6 +615,4 @@ namespace nocontainer
             // No scopes, so nothing to dispose
         }
     }
-
-    #endregion
 }

@@ -1,15 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using nocontainer;
 using Xunit;
 
-namespace NoContainer.Tests
+namespace HQ.Harmony.Tests
 {
-    public class RegisterTests : IClassFixture<NoContainerFixture>
+    public class RegisterTests : IClassFixture<HarmonyContainerFixture>
     {
-        readonly NoContainerFixture _fixture;
+	    private readonly HarmonyContainerFixture _fixture;
 
-        public RegisterTests(NoContainerFixture fixture)
+        public RegisterTests(HarmonyContainerFixture fixture)
         {
             _fixture = fixture;
         }

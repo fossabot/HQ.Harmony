@@ -1,13 +1,13 @@
 ﻿using System;
 using nocontainer;
 
-namespace NoContainer.Tests
+namespace HQ.Harmony.Tests
 {
-    public class NoContainerFixture : IDisposable
+    public class HarmonyContainerFixture : IDisposable
     {
-        public NoContainerFixture()
+        public HarmonyContainerFixture()
         {
-            C = new nocontainer.NoContainer();
+            C = new HarmonyContainer();
         }
 
         public void Dispose()

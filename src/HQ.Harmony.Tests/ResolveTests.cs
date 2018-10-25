@@ -1,13 +1,12 @@
-﻿using nocontainer;
-using Xunit;
+﻿using Xunit;
 
-namespace NoContainer.Tests
+namespace HQ.Harmony.Tests
 {
-    public class ResolveTests : IClassFixture<NoContainerFixture>
+    public class ResolveTests : IClassFixture<HarmonyContainerFixture>
     {
-        private readonly NoContainerFixture _fixture;
+        private readonly HarmonyContainerFixture _fixture;
 
-        public ResolveTests(NoContainerFixture fixture)
+        public ResolveTests(HarmonyContainerFixture fixture)
         {
             _fixture = fixture;
         }

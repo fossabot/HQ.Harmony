@@ -1,3 +1,5 @@
+Initial code was licensed under Apache 2.0 as at July 23rd, 2018, commit `e8d9287baf7bfbfbd7e4130c50470b3b4b73ba18` in this source history.
+
    Copyright 2016-2018 Daniel Crenna
 
    Licensed under the Apache License, Version 2.0 (the "License");
